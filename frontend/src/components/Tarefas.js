@@ -1,98 +1,61 @@
-import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashAlt, faEdit, faCheck } from '@fortawesome/free-solid-svg-icons';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-function App() {
-  const [tasks, setTasks] = useState([]);
-  const [newTask, setNewTask] = useState('');
-  const [editingTaskIndex, setEditingTaskIndex] = useState(null);
-  const [editedTaskText, setEditedTaskText] = useState('');
+function Tarefas({ listaId }) {
+  const [tarefas, setTarefas] = useState([]);
+  const [novaTarefa, setNovaTarefa] = useState('');
 
-  const addTask = () => {
-    if (newTask.trim() !== '') {
-      setTasks([...tasks, { text: newTask, completed: false }]);
-      setNewTask('');
+  useEffect(() => {
+    fetchTarefas();
+  }, []);
+
+  const fetchTarefas = async () => {
+    try {
+      const response = await axios.get(`http://localhost:3000/api/tarefas/${listaId}`);
+      setTarefas(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar tarefas:', error);
     }
   };
 
-  const toggleTaskCompletion = index => {
-    const updatedTasks = tasks.map((task, i) =>
-      i === index ? { ...task, completed: !task.completed } : task
-    );
-    setTasks(updatedTasks);
+  const adicionarTarefa = async () => {
+    if (novaTarefa.trim() !== '') {
+      try {
+        const response = await axios.post(`http://localhost:3000/api/tarefas/create`, { text: novaTarefa, listaId });
+        setTarefas([...tarefas, response.data]);
+        setNovaTarefa('');
+      } catch (error) {
+        console.error('Erro ao adicionar tarefa:', error);
+      }
+    }
   };
 
-  const deleteTask = index => {
-    const updatedTasks = tasks.filter((_, i) => i !== index);
-    setTasks(updatedTasks);
-  };
-
-  const startEditingTask = index => {
-    const taskText = tasks[index].text;
-    setEditingTaskIndex(index);
-    setEditedTaskText(taskText);
-  };
-
-  const finishEditingTask = index => {
-    const updatedTasks = [...tasks];
-    updatedTasks[index].text = editedTaskText;
-    setTasks(updatedTasks);
-    setEditingTaskIndex(null);
+  const deletarTarefa = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3000/api/tarefas/${id}`);
+      setTarefas(tarefas.filter(tarefa => tarefa._id !== id));
+    } catch (error) {
+      console.error('Erro ao deletar tarefa:', error);
+    }
   };
 
   return (
-    <div className="container">
-      <h1>To-Do List</h1>
-      <div className="input-group mb-3">
+    <div>
+      <h2>Tarefas</h2>
+      <div>
         <input
           type="text"
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-          className="form-control"
-          placeholder="Enter task"
+          value={novaTarefa}
+          onChange={(e) => setNovaTarefa(e.target.value)}
+          placeholder="Nome da nova tarefa"
         />
-        <button onClick={addTask} className="btn btn-primary">Add Task</button>
+        <button onClick={adicionarTarefa}>Adicionar Tarefa</button>
       </div>
-      <ul className="list-group">
-        {tasks.map((task, index) => (
-          <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-            {editingTaskIndex === index ? (
-              <div className="input-group">
-                <input
-                  type="text"
-                  value={editedTaskText}
-                  onChange={(e) => setEditedTaskText(e.target.value)}
-                  className="form-control"
-                />
-                <button onClick={() => finishEditingTask(index)} className="btn btn-success btn-sm">
-                  <FontAwesomeIcon icon={faCheck} />
-                </button>
-              </div>
-            ) : (
-              <div>
-                <input
-                  type="checkbox"
-                  checked={task.completed}
-                  onChange={() => toggleTaskCompletion(index)}
-                  className="mr-3"
-                />
-                <span
-                  style={{
-                    textDecoration: task.completed ? 'line-through' : 'none'
-                  }}
-                >
-                  {task.text}
-                </span>
-              </div>
-            )}
-            <div>
-              <button onClick={() => startEditingTask(index)} className="btn btn-primary btn-sm mr-2">
-                <FontAwesomeIcon icon={faEdit} />
-              </button>
-              <button onClick={() => deleteTask(index)} className="btn btn-danger btn-sm">
-                <FontAwesomeIcon icon={faTrashAlt} />
-              </button>
-            </div>
+      <ul>
+        {tarefas.map(tarefa => (
+          <li key={tarefa._id}>
+            {tarefa.text}
+            <button onClick={() => deletarTarefa(tarefa._id)}>Deletar</button>
           </li>
         ))}
       </ul>
@@ -100,4 +63,4 @@ function App() {
   );
 }
 
-export default App;
+export default Tarefas;
