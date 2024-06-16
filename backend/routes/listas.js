@@ -5,12 +5,11 @@ const Lista = require('../models/Lista');
 // Criar uma nova lista
 router.post('/create', async (req, res) => {
   try {
-    const newLista = new Lista({ name: req.body.name, tasks: [] });
-    const lista = await newLista.save();
-    res.json(lista);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Erro ao criar a lista', message: err.message });
+    const novaLista = new Lista(req.body);
+    const listaSalva = await novaLista.save();
+    res.status(201).json(listaSalva);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao criar a lista' });
   }
 });
 

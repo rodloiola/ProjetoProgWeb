@@ -13,6 +13,7 @@ function Listas() {
   const fetchListas = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/listas');
+      console.log('Listas fetched:', response.data);
       setListas(response.data);
     } catch (error) {
       console.error('Erro ao buscar listas:', error);
@@ -20,14 +21,18 @@ function Listas() {
   };
 
   const adicionarLista = async () => {
+    console.log('Adicionar Lista clicado:', novaLista);
     if (novaLista.trim() !== '') {
       try {
         const response = await axios.post('http://localhost:3000/api/listas/create', { name: novaLista });
+        console.log('Lista adicionada:', response.data);
         setListas([...listas, response.data]);
         setNovaLista('');
       } catch (error) {
         console.error('Erro ao adicionar lista:', error);
       }
+    } else {
+      console.warn('Nome da nova lista está vazio');
     }
   };
 
@@ -41,26 +46,23 @@ function Listas() {
   };
 
   return (
-    <div className="container">
+    <div>
       <h1>Listas</h1>
-      <div className="input-group mb-3">
+      <div>
         <input
           type="text"
           value={novaLista}
           onChange={(e) => setNovaLista(e.target.value)}
-          className="form-control"
           placeholder="Nome da nova lista"
         />
-        <button onClick={adicionarLista} className="btn btn-primary">Adicionar Lista</button>
+        <button onClick={adicionarLista}>Adicionar Lista</button>
       </div>
-      <ul className="list-group">
+      <ul>
         {listas.map(lista => (
-          <li key={lista._id} className="list-group-item d-flex justify-content-between align-items-center">
+          <li key={lista._id}>
             {lista.name}
-            <div>
-              <button onClick={() => deletarLista(lista._id)} className="btn btn-danger btn-sm">Deletar</button>
-              <Tarefas listaId={lista._id} />
-            </div>
+            <button onClick={() => deletarLista(lista._id)}>Deletar</button>
+            <Tarefas listaId={lista._id} />
           </li>
         ))}
       </ul>
