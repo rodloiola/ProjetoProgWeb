@@ -1,27 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 function Tarefas({ listaId }) {
   const [tarefas, setTarefas] = useState([]);
   const [novaTarefa, setNovaTarefa] = useState('');
 
-  useEffect(() => {
-    fetchTarefas();
-  }, []);
-
-  const fetchTarefas = async () => {
+  const fetchTarefas = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:3000/api/tarefas/${listaId}`);
+      const response = await axios.get(`http://localhost:3000/api/tarefas?lista=${listaId}`);
       setTarefas(response.data);
     } catch (error) {
       console.error('Erro ao buscar tarefas:', error);
     }
-  };
+  }, [listaId]);
+
+  useEffect(() => {
+    fetchTarefas();
+  }, [fetchTarefas]);
 
   const adicionarTarefa = async () => {
     if (novaTarefa.trim() !== '') {
       try {
-        const response = await axios.post(`http://localhost:3000/api/tarefas/create`, { text: novaTarefa, listaId });
+        const response = await axios.post('http://localhost:3000/api/tarefas/create', {
+          description: novaTarefa,
+          lista: listaId,
+        });
         setTarefas([...tarefas, response.data]);
         setNovaTarefa('');
       } catch (error) {
@@ -40,22 +43,23 @@ function Tarefas({ listaId }) {
   };
 
   return (
-    <div>
+    <div className="mt-3">
       <h2>Tarefas</h2>
-      <div>
+      <div className="mb-3">
         <input
           type="text"
           value={novaTarefa}
           onChange={(e) => setNovaTarefa(e.target.value)}
-          placeholder="Nome da nova tarefa"
+          placeholder="Descrição da nova tarefa"
+          className="form-control"
         />
-        <button onClick={adicionarTarefa}>Adicionar Tarefa</button>
+        <button onClick={adicionarTarefa} className="btn btn-primary mt-2">Adicionar Tarefa</button>
       </div>
-      <ul>
+      <ul className="list-group">
         {tarefas.map(tarefa => (
-          <li key={tarefa._id}>
-            {tarefa.text}
-            <button onClick={() => deletarTarefa(tarefa._id)}>Deletar</button>
+          <li key={tarefa._id} className="list-group-item">
+            {tarefa.description}
+            <button onClick={() => deletarTarefa(tarefa._id)} className="btn btn-danger btn-sm float-end">Deletar</button>
           </li>
         ))}
       </ul>

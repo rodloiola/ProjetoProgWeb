@@ -1,47 +1,45 @@
 const express = require('express');
 const router = express.Router();
+const Tarefa = require('../models/tarefa');
 const Lista = require('../models/lista');
 
-// Adicionar tarefa à lista
-router.post('/:listaId/tarefas', async (req, res) => {
+// GET /api/tarefas?lista=listaId
+router.get('/', async (req, res) => {
   try {
-    const lista = await Lista.findById(req.params.listaId);
-    if (!lista) {
-      return res.status(404).json({ error: 'Lista não encontrada' });
-    }
-    lista.tasks.push({ text: req.body.text, completed: false });
-    await lista.save();
-    res.status(201).json(lista);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao adicionar a tarefa' });
-  }
-});
-
-// Obter todas as tarefas de uma lista
-router.get('/:listaId/tarefas', async (req, res) => {
-  try {
-    const lista = await Lista.findById(req.params.listaId);
-    if (!lista) {
-      return res.status(404).json({ error: 'Lista não encontrada' });
-    }
-    res.json(lista.tasks);
+    const { lista } = req.query;
+    const tarefas = await Tarefa.find({ lista });
+    res.json(tarefas);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar tarefas' });
   }
 });
 
-// Deletar uma tarefa de uma lista
-router.delete('/:listaId/tarefas/:tarefaId', async (req, res) => {
+// POST /api/tarefas/create
+router.post('/create', async (req, res) => {
   try {
-    const lista = await Lista.findById(req.params.listaId);
-    if (!lista) {
-      return res.status(404).json({ error: 'Lista não encontrada' });
-    }
-    lista.tasks.id(req.params.tarefaId).remove();
-    await lista.save();
-    res.json({ message: 'Tarefa removida' });
+    const { description, lista } = req.body;
+    const novaTarefa = new Tarefa({ description, lista });
+    await novaTarefa.save();
+
+    // Atualizar a lista para incluir a nova tarefa
+    const listaAtual = await Lista.findById(lista);
+    listaAtual.tasks.push(novaTarefa);
+    await listaAtual.save();
+
+    res.json(novaTarefa);
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao deletar a tarefa' });
+    res.status(500).json({ error: 'Erro ao criar tarefa' });
+  }
+});
+
+// DELETE /api/tarefas/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Tarefa.findByIdAndDelete(id);
+    res.json({ msg: 'Tarefa removida' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao deletar tarefa' });
   }
 });
 

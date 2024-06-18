@@ -1,40 +1,37 @@
 const express = require('express');
 const router = express.Router();
-const Lista = require('../models/Lista');
+const Lista = require('../models/lista');
 
-// Criar uma nova lista
-router.post('/create', async (req, res) => {
-  try {
-    const novaLista = new Lista(req.body);
-    const listaSalva = await novaLista.save();
-    res.status(201).json(listaSalva);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao criar a lista' });
-  }
-});
-
-// Visualizar todas as listas
+// GET /api/listas
 router.get('/', async (req, res) => {
   try {
-    const listas = await Lista.find();
+    const listas = await Lista.find().populate('tasks');
     res.json(listas);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Erro ao buscar as listas', message: err.message });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar listas' });
   }
 });
 
-// Deletar uma lista
+// POST /api/listas/create
+router.post('/create', async (req, res) => {
+  try {
+    const { name } = req.body;
+    const novaLista = new Lista({ name });
+    await novaLista.save();
+    res.json(novaLista);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao criar lista' });
+  }
+});
+
+// DELETE /api/listas/:id
 router.delete('/:id', async (req, res) => {
   try {
-    const result = await Lista.deleteOne({ _id: req.params.id });
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ error: 'Lista não encontrada' });
-    }
+    const { id } = req.params;
+    await Lista.findByIdAndDelete(id);
     res.json({ msg: 'Lista removida' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Erro ao deletar a lista', message: err.message });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao deletar lista' });
   }
 });
 

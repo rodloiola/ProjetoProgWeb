@@ -13,7 +13,6 @@ function Listas() {
   const fetchListas = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/listas');
-      console.log('Listas fetched:', response.data);
       setListas(response.data);
     } catch (error) {
       console.error('Erro ao buscar listas:', error);
@@ -21,18 +20,14 @@ function Listas() {
   };
 
   const adicionarLista = async () => {
-    console.log('Adicionar Lista clicado:', novaLista);
     if (novaLista.trim() !== '') {
       try {
         const response = await axios.post('http://localhost:3000/api/listas/create', { name: novaLista });
-        console.log('Lista adicionada:', response.data);
         setListas([...listas, response.data]);
         setNovaLista('');
       } catch (error) {
         console.error('Erro ao adicionar lista:', error);
       }
-    } else {
-      console.warn('Nome da nova lista está vazio');
     }
   };
 
@@ -46,22 +41,23 @@ function Listas() {
   };
 
   return (
-    <div>
+    <div className="container mt-4">
       <h1>Listas</h1>
-      <div>
+      <div className="mb-3">
         <input
           type="text"
           value={novaLista}
           onChange={(e) => setNovaLista(e.target.value)}
           placeholder="Nome da nova lista"
+          className="form-control"
         />
-        <button onClick={adicionarLista}>Adicionar Lista</button>
+        <button onClick={adicionarLista} className="btn btn-primary mt-2">Adicionar Lista</button>
       </div>
-      <ul>
+      <ul className="list-group">
         {listas.map(lista => (
-          <li key={lista._id}>
+          <li key={lista._id} className="list-group-item">
             {lista.name}
-            <button onClick={() => deletarLista(lista._id)}>Deletar</button>
+            <button onClick={() => deletarLista(lista._id)} className="btn btn-danger btn-sm float-end">Deletar</button>
             <Tarefas listaId={lista._id} />
           </li>
         ))}
